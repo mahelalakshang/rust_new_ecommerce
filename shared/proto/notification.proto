@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package notification;
+
+// Request message for product notification
+message ProductNotificationRequest {
+    string user_id = 1;
+    string name = 2;
+    string username=3;
+}
+
+// Response message for product notification
+message ProductNotificationResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+// Notification service definition
+service NotificationService {
+    rpc SendProductNotification(ProductNotificationRequest) returns (ProductNotificationResponse);
+}

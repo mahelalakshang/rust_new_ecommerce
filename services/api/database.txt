@@ -1,0 +1,24 @@
+
+-- connect to db
+sudo -u postgres psql
+
+-- List all databases
+\l
+-- Connect to your database
+\c myrustdb
+-- List all tables
+\dt
+-- Describe a specific table structure
+\d users
+\d posts
+-- View data in tables
+SELECT * FROM users;
+SELECT * FROM posts;
+-- Exit psql
+\q
+
+
+cargo run --bin setup_db
+
+--create migration
+sqlx migrate add products
