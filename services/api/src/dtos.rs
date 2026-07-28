@@ -21,6 +21,14 @@ pub struct AuthResponse {
     pub token: String,
 }
 
+#[derive(Debug, Serialize)]
+pub struct MeResponse {
+    pub id: Uuid,
+    pub username: String,
+    pub role: String,
+    pub created_at: DateTime<Utc>,
+}
+
 // Post DTOs
 #[derive(Debug, Deserialize)]
 pub struct CreatePostRequest {
@@ -32,6 +40,12 @@ pub struct CreatePostRequest {
 pub struct PaginationRequest {
     pub limit: Option<i64>,
     pub offset: Option<i64>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct PaginatedResponse<T> {
+    pub items: Vec<T>,
+    pub total: i64,
 }
 
 #[derive(Debug, Serialize)]

@@ -7,7 +7,7 @@ use axum::{
 
 use crate::{
     config::Config,
-    dtos::{CreateProductRequest, PaginationRequest, ProductResponse},
+    dtos::{CreateProductRequest, PaginatedResponse, PaginationRequest, ProductResponse},
     error::AppError,
     model::{Product, User},
 };
@@ -64,9 +64,13 @@ pub async fn create_product(
 pub async fn get_products(
     State(state): State<Arc<Config>>,
     Query(pagination): Query<PaginationRequest>,
-) -> Result<Json<Vec<ProductResponse>>, AppError> {
+) -> Result<Json<PaginatedResponse<ProductResponse>>, AppError> {
     let limit = pagination.limit.unwrap_or(10);
     let offset = pagination.offset.unwrap_or(0);
+
+    let total: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM products")
+        .fetch_one(&state.db_pool)
+        .await?;
 
     let products = sqlx::query_as::<_, Product>(
         "SELECT * FROM products ORDER BY created_at DESC LIMIT $1 OFFSET $2",
@@ -76,7 +80,7 @@ pub async fn get_products(
     .fetch_all(&state.db_pool)
     .await?;
 
-    let response = products
+    let items = products
         .into_iter()
         .map(|p| ProductResponse {
             id: p.id,
@@ -88,7 +92,7 @@ pub async fn get_products(
         })
         .collect();
 
-    Ok(Json(response))
+    Ok(Json(PaginatedResponse { items, total }))
 }
 
 pub async fn get_product_by_id(

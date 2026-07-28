@@ -1,17 +1,8 @@
-done - Add CORS support — no tower-http CORS layer exists at all; browser requests from a Vite dev server (or any separate frontend origin) will be blocked outright.
-
-Add GET /categories/ (and ideally GET /categories/{id}) — currently only creation exists, so there's no way to list categories for a dropdown/filter.
-
-Make product browsing public — GET /products/ and GET /products/{id} currently require auth, so logged-out users can't browse the storefront.
-
-Fix category creation to be admin-gated — POST /categories/ only has auth_guard, missing require_admin, so any logged-in user can currently create categories (inconsistent with product creation).
 
 Add checkout/orders functionality — cart has no "place order" endpoint or orders table at all; only add/update/remove/view cart exists.
 
 Add a GET /auth/me (current user) endpoint, and include role in the JWT claims — right now the frontend has no way to know if the logged-in user is an admin.
 
-Add total counts to list endpoints — GET /posts/ and GET /products/ return bare arrays with no total/has_more, so proper pagination UI isn't possible.
 
 Return friendly errors for duplicate category names — currently falls through to a generic 500 "Database Error" instead of a 400 like the username-exists check.
 
-(Optional/nice-to-have) Add filtering/sorting query params to GET /products/ (e.g. ?category_id=, ?q=) so the frontend doesn't have to filter client-side.

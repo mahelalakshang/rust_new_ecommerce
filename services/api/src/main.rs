@@ -47,7 +47,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Auth Routes
     let auth_routes = Router::new()
         .route("/signup", post(auth::signup_handler))
-        .route("/login", post(auth::login_handler));
+        .route("/login", post(auth::login_handler))
+        .merge(
+            Router::new()
+                .route("/me", get(auth::me_handler))
+                .route_layer(from_fn_with_state(state.clone(), mw::auth_guard)),
+        );
 
     // Post Routes (Protected)
     let post_routes = Router::new()
@@ -73,10 +78,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .route_layer(from_fn_with_state(state.clone(), mw::auth_guard)),
         );
 
-    //Category Routes
+    // Category Routes: read requires auth; create requires auth + admin
     let category_routes = Router::new()
-        .route("/", post(category_handler::create_category))
-        .route_layer(from_fn_with_state(state.clone(), mw::auth_guard));
+        .merge(
+            Router::new()
+                .route("/", post(category_handler::create_category))
+                .route_layer(from_fn_with_state(state.clone(), mw::require_admin))
+                .route_layer(from_fn_with_state(state.clone(), mw::auth_guard)),
+        )
+        .merge(
+            Router::new()
+                .route("/", get(category_handler::get_categories))
+                .route("/{id}", get(category_handler::get_category_by_id))
+                .route_layer(from_fn_with_state(state.clone(), mw::auth_guard)),
+        );
 
     // Cart Routes (Protected)
     let cart_routes = Router::new()

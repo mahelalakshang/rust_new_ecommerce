@@ -1,6 +1,6 @@
 use crate::{
     config::Config,
-    dtos::{AuthResponse, LoginRequest, SignupRequest},
+    dtos::{AuthResponse, LoginRequest, MeResponse, SignupRequest},
     error::AppError,
     model::User,
     utils::{
@@ -8,8 +8,9 @@ use crate::{
         jwt::encode_jwt,
     },
 };
-use axum::{Json, extract::State};
+use axum::{Extension, Json, extract::State};
 use std::sync::Arc;
+use uuid::Uuid;
 
 pub async fn signup_handler(
     State(state): State<Arc<Config>>,
@@ -34,7 +35,7 @@ pub async fn signup_handler(
         AppError::Database(e)
     })?;
 
-    let token = encode_jwt(user.id, &state.jwt_secret)?;
+    let token = encode_jwt(user.id, &user.role, &state.jwt_secret)?;
 
     Ok(Json(AuthResponse { token }))
 }
@@ -53,7 +54,25 @@ pub async fn login_handler(
         return Err(AppError::Unauthorized);
     }
 
-    let token = encode_jwt(user.id, &state.jwt_secret)?;
+    let token = encode_jwt(user.id, &user.role, &state.jwt_secret)?;
 
     Ok(Json(AuthResponse { token }))
+}
+
+pub async fn me_handler(
+    State(state): State<Arc<Config>>,
+    Extension(user_id): Extension<Uuid>,
+) -> Result<Json<MeResponse>, AppError> {
+    let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE id = $1")
+        .bind(user_id)
+        .fetch_optional(&state.db_pool)
+        .await?
+        .ok_or(AppError::Unauthorized)?;
+
+    Ok(Json(MeResponse {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        created_at: user.created_at,
+    }))
 }

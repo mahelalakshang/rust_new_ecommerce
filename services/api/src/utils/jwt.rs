@@ -7,16 +7,18 @@ use crate::error::AppError;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
     pub sub: Uuid,
+    pub role: String,
     pub exp: usize,
     pub iat: usize,
 }
 
-pub fn encode_jwt(user_id: Uuid, secret: &str) -> Result<String, AppError> {
+pub fn encode_jwt(user_id: Uuid, role: &str, secret: &str) -> Result<String, AppError> {
     let now = Utc::now();
     let expire = now + Duration::hours(24);
-    
+
     let claims = Claims {
         sub: user_id,
+        role: role.to_string(),
         exp: expire.timestamp() as usize,
         iat: now.timestamp() as usize,
     };
