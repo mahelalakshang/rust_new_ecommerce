@@ -1,0 +1,15 @@
+import { Loader2 } from "lucide-react";
+
+import { cn } from "@/lib/utils";
+
+export function LoadingSpinner({ className }: { className?: string }) {
+  return <Loader2 className={cn("size-6 animate-spin text-muted-foreground", className)} />;
+}
+
+export function FullPageSpinner() {
+  return (
+    <div className="flex min-h-svh items-center justify-center">
+      <LoadingSpinner className="size-8" />
+    </div>
+  );
+}

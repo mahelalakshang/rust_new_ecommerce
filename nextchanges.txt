@@ -1,8 +1,1 @@
-
-Add checkout/orders functionality — cart has no "place order" endpoint or orders table at all; only add/update/remove/view cart exists.
-
-Add a GET /auth/me (current user) endpoint, and include role in the JWT claims — right now the frontend has no way to know if the logged-in user is an admin.
-
-
-Return friendly errors for duplicate category names — currently falls through to a generic 500 "Database Error" instead of a 400 like the username-exists check.
-
+Unit testing
