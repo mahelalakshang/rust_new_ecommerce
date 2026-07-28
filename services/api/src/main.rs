@@ -1,10 +1,12 @@
 use axum::{
+    http::{header, HeaderValue, Method},
     middleware::from_fn_with_state,
     routing::{delete, get, patch, post},
     Router,
 };
 use std::sync::Arc;
 use tokio::net::TcpListener;
+use tower_http::cors::CorsLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod config;
@@ -33,6 +35,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Load configuration //Arc only clone pointers without clone strings many times
     let config = Config::from_env().await?;
+    let cors_origin = config.cors_origin.clone();
     let state = Arc::new(config);
 
     // Run migrations on startup to ensure consistency
@@ -87,6 +90,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .route_layer(from_fn_with_state(state.clone(), mw::auth_guard));
 
+    // CORS
+    let cors = CorsLayer::new()
+        .allow_origin(
+            cors_origin
+                .parse::<HeaderValue>()
+                .expect("CORS_ORIGIN must be a valid origin value"),
+        )
+        .allow_methods([
+            Method::GET,
+            Method::POST,
+            Method::PATCH,
+            Method::DELETE,
+            Method::OPTIONS,
+        ])
+        .allow_headers([header::AUTHORIZATION, header::CONTENT_TYPE]);
+
     // Combine Routes
     let app = Router::new()
         .nest("/auth", auth_routes)
@@ -94,7 +113,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .nest("/products", product_routes)
         .nest("/categories", category_routes)
         .nest("/cart", cart_routes)
-        .with_state(state);
+        .with_state(state)
+        .layer(cors);
 
     // Start Server
     let listener = TcpListener::bind("127.0.0.1:3001").await?;

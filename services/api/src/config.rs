@@ -8,6 +8,7 @@ use tracing::info;
 pub struct Config {
     pub db_pool: PgPool,
     pub jwt_secret: String,
+    pub cors_origin: String,
 }
 
 impl Config {
@@ -16,6 +17,8 @@ impl Config {
 
         let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
         let jwt_secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+        let cors_origin =
+            env::var("CORS_ORIGIN").unwrap_or_else(|_| "http://localhost:5173".to_string());
 
         let pool = PgPoolOptions::new()
             .max_connections(5)
@@ -27,6 +30,7 @@ impl Config {
         Ok(Self {
             db_pool: pool,
             jwt_secret,
+            cors_origin,
         })
     }
 }
