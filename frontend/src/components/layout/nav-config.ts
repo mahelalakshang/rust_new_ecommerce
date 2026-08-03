@@ -1,4 +1,4 @@
-import { FolderPlus, Package, PackagePlus, type LucideIcon } from "lucide-react";
+import { ClipboardList, FolderPlus, Package, PackagePlus, type LucideIcon } from "lucide-react";
 
 export interface NavItem {
   to: string;
@@ -10,7 +10,10 @@ export interface NavItem {
 
 /** Single source of truth for sidebar navigation. Add new pages here. */
 export function getNavItems(isAdmin: boolean): NavItem[] {
-  const items: NavItem[] = [{ to: "/", label: "Products", icon: Package, end: true }];
+  const items: NavItem[] = [
+    { to: "/", label: "Products", icon: Package, end: true },
+    { to: "/orders", label: "Orders", icon: ClipboardList },
+  ];
 
   if (isAdmin) {
     items.push(

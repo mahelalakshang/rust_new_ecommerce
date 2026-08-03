@@ -2,13 +2,17 @@ use std::env;
 use std::sync::Arc;
 use sqlx::postgres::{PgPoolOptions, PgPool};
 use dotenvy::dotenv;
+use tonic::transport::Channel;
 use tracing::info;
+
+use crate::grpc_order_client::order::order_service_client::OrderServiceClient;
 
 #[derive(Clone)]
 pub struct Config {
     pub db_pool: PgPool,
     pub jwt_secret: String,
     pub cors_origin: String,
+    pub order_client: OrderServiceClient<Channel>,
 }
 
 impl Config {
@@ -31,6 +35,7 @@ impl Config {
             db_pool: pool,
             jwt_secret,
             cors_origin,
+            order_client: crate::grpc_order_client::connect(),
         })
     }
 }

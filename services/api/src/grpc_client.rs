@@ -6,7 +6,8 @@ pub mod notification {
 }
 
 use notification::{
-    notification_service_client::NotificationServiceClient, ProductNotificationRequest,
+    notification_service_client::NotificationServiceClient, OrderConfirmationRequest,
+    ProductNotificationRequest,
 };
 
 /// Send a product notification to the notification service
@@ -32,6 +33,36 @@ pub async fn send_product_notification(
 
     tracing::info!(
         "Notification sent successfully: {}",
+        response.into_inner().message
+    );
+
+    Ok(())
+}
+
+/// Send an order confirmation notification to the notification service
+pub async fn send_order_confirmation(
+    user_id: &str,
+    order_id: &str,
+    username: &str,
+    total_amount: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let channel = Channel::from_static("http://localhost:50051")
+        .connect()
+        .await?;
+
+    let mut client = NotificationServiceClient::new(channel);
+
+    let request = tonic::Request::new(OrderConfirmationRequest {
+        user_id: user_id.to_string(),
+        order_id: order_id.to_string(),
+        username: username.to_string(),
+        total_amount: total_amount.to_string(),
+    });
+
+    let response = client.send_order_confirmation(request).await?;
+
+    tracing::info!(
+        "Order confirmation sent successfully: {}",
         response.into_inner().message
     );
 

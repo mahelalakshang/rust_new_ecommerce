@@ -10,6 +10,8 @@ import { SignupPage } from "@/features/auth/SignupPage";
 import { ProductListPage } from "@/features/products/ProductListPage";
 import { ProductDetailPage } from "@/features/products/ProductDetailPage";
 import { CartPage } from "@/features/cart/CartPage";
+import { OrderHistoryPage } from "@/features/orders/OrderHistoryPage";
+import { OrderDetailPage } from "@/features/orders/OrderDetailPage";
 import { CreateCategoryPage } from "@/features/admin/CreateCategoryPage";
 import { CreateProductPage } from "@/features/admin/CreateProductPage";
 
@@ -30,6 +32,8 @@ export const router = createBrowserRouter([
           { path: "/", element: <ProductListPage /> },
           { path: "/products/:id", element: <ProductDetailPage /> },
           { path: "/cart", element: <CartPage /> },
+          { path: "/orders", element: <OrderHistoryPage /> },
+          { path: "/orders/:id", element: <OrderDetailPage /> },
           {
             element: <AdminRoute />,
             children: [

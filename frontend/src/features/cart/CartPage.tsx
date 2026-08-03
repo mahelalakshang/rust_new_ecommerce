@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/feedback/EmptyState";
@@ -7,9 +7,12 @@ import { FullPageSpinner } from "@/components/feedback/LoadingSpinner";
 import { CartItemRow } from "@/features/cart/components/CartItemRow";
 import { CartSummary } from "@/features/cart/components/CartSummary";
 import { useCart } from "@/features/cart/hooks";
+import { useCheckout } from "@/features/orders/hooks";
 
 export function CartPage() {
+  const navigate = useNavigate();
   const { data: cart, isPending, isError, error } = useCart();
+  const checkout = useCheckout();
 
   if (isPending) return <FullPageSpinner />;
   if (isError) return <ErrorState error={error} />;
@@ -39,8 +42,20 @@ export function CartPage() {
           ))}
         </div>
       </div>
-      <div>
+      <div className="flex flex-col gap-4">
         <CartSummary total={cart.total} itemCount={itemCount} />
+        {checkout.isError && <ErrorState error={checkout.error} />}
+        <Button
+          size="lg"
+          disabled={checkout.isPending}
+          onClick={() =>
+            checkout.mutate(undefined, {
+              onSuccess: (order) => navigate(`/orders/${order.id}`),
+            })
+          }
+        >
+          {checkout.isPending ? "Placing order..." : "Checkout"}
+        </Button>
       </div>
     </div>
   );

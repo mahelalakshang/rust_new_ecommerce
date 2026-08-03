@@ -15,7 +15,22 @@ message ProductNotificationResponse {
     string message = 2;
 }
 
+// Request message for order confirmation
+message OrderConfirmationRequest {
+    string user_id = 1;
+    string order_id = 2;
+    string username = 3;
+    string total_amount = 4;
+}
+
+// Response message for order confirmation
+message OrderConfirmationResponse {
+    bool success = 1;
+    string message = 2;
+}
+
 // Notification service definition
 service NotificationService {
     rpc SendProductNotification(ProductNotificationRequest) returns (ProductNotificationResponse);
+    rpc SendOrderConfirmation(OrderConfirmationRequest) returns (OrderConfirmationResponse);
 }

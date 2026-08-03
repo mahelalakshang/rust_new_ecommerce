@@ -1,1 +1,8 @@
 Unit testing
+GRPC advanced
+Docarize
+Kafka advanced
+k8 rize
+prometheus, grafana with docker k8
+
+

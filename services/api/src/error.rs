@@ -20,6 +20,21 @@ impl From<sqlx::Error> for AppError {
     }
 }
 
+impl From<tonic::Status> for AppError {
+    fn from(status: tonic::Status) -> Self {
+        use tonic::Code;
+        match status.code() {
+            Code::InvalidArgument | Code::FailedPrecondition | Code::NotFound => {
+                AppError::BadRequest(status.message().to_string())
+            }
+            _ => {
+                tracing::error!("Order service error: {:?}", status);
+                AppError::InternalServerError
+            }
+        }
+    }
+}
+
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         let (status, error_message) = match self {

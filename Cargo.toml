@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "services/api",
     "services/notification",
+    "services/order",
 ]
 
 [workspace.dependencies]

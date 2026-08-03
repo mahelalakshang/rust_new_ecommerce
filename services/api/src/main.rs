@@ -13,14 +13,15 @@ mod config;
 mod dtos;
 mod error;
 mod grpc_client;
+mod grpc_order_client;
 mod model;
 mod utils;
 mod web;
 
 use config::Config;
 use web::{
-    auth, cart as cart_handler, category as category_handler, mw, post as post_handler,
-    product as product_handler,
+    auth, cart as cart_handler, category as category_handler, checkout as checkout_handler, mw,
+    order as order_handler, post as post_handler, product as product_handler,
 };
 
 #[tokio::main]
@@ -38,8 +39,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cors_origin = config.cors_origin.clone();
     let state = Arc::new(config);
 
-    // Run migrations on startup to ensure consistency
-    sqlx::migrate!("./migrations")
+    // Run migrations on startup to ensure consistency.
+    // Shares one Postgres instance (and one `_sqlx_migrations` table) with the
+    // order service, which owns its own separate migration history. `ignore_missing`
+    // lets this migrator skip over versions it doesn't recognize (the order
+    // service's) instead of erroring, while still applying its own new migrations.
+    let mut migrator = sqlx::migrate!("./migrations");
+    migrator.set_ignore_missing(true);
+    migrator
         .run(&state.db_pool)
         .await
         .expect("Failed to run migrations");
@@ -105,6 +112,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .route_layer(from_fn_with_state(state.clone(), mw::auth_guard));
 
+    // Checkout Routes (Protected): converts the cart into an order via the Order gRPC service
+    let checkout_routes = Router::new()
+        .route("/", post(checkout_handler::checkout))
+        .route_layer(from_fn_with_state(state.clone(), mw::auth_guard));
+
+    // Order Routes (Protected)
+    let order_routes = Router::new()
+        .route("/", get(order_handler::get_orders))
+        .route("/{id}", get(order_handler::get_order_by_id))
+        .route_layer(from_fn_with_state(state.clone(), mw::auth_guard));
+
     // CORS
     let cors = CorsLayer::new()
         .allow_origin(
@@ -128,6 +146,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .nest("/products", product_routes)
         .nest("/categories", category_routes)
         .nest("/cart", cart_routes)
+        .nest("/checkout", checkout_routes)
+        .nest("/orders", order_routes)
         .with_state(state)
         .layer(cors);
 

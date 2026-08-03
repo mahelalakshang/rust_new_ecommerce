@@ -9,7 +9,8 @@ pub mod notification {
 
 use notification::{
     notification_service_server::{NotificationService, NotificationServiceServer},
-    ProductNotificationRequest, ProductNotificationResponse,
+    OrderConfirmationRequest, OrderConfirmationResponse, ProductNotificationRequest,
+    ProductNotificationResponse,
 };
 
 #[derive(Clone)]
@@ -62,6 +63,56 @@ impl NotificationService for NotificationServiceImpl {
         let response = ProductNotificationResponse {
             success: true,
             message: format!("Notification received for product: {}", req.name),
+        };
+
+        Ok(Response::new(response))
+    }
+
+    async fn send_order_confirmation(
+        &self,
+        request: Request<OrderConfirmationRequest>,
+    ) -> Result<Response<OrderConfirmationResponse>, Status> {
+        let req = request.into_inner();
+
+        println!("📦 ORDER CONFIRMATION RECEIVED:");
+        println!("   User ID: {}", req.user_id);
+        println!("   Order ID: {}", req.order_id);
+        println!("   Username: {}", req.username);
+        println!("   Total: {}", req.total_amount);
+        println!("   Timestamp: {}", chrono::Utc::now());
+        println!("---");
+
+        let email = Message::builder()
+            .from(
+                self.from_email
+                    .parse()
+                    .map_err(|e| Status::internal(format!("invalid from address: {e}")))?,
+            )
+            .to(req
+                .username
+                .parse()
+                .map_err(|e| Status::internal(format!("invalid recipient address: {e}")))?)
+            .subject(format!("Order Confirmation: #{}", req.order_id))
+            .body(format!(
+                "Thanks for your order!\n\nOrder ID: {}\nTotal: {}\nPlaced At: {}\n\nThis is an automated notification.",
+                req.order_id,
+                req.total_amount,
+                chrono::Utc::now().format("%Y-%m-%d %H:%M:%S UTC")
+            ))
+            .map_err(|e| Status::internal(format!("failed to build email: {e}")))?;
+
+        match self.mailer.send(email).await {
+            Ok(_) => tracing::info!("Order confirmation email sent to {}", req.username),
+            Err(e) => tracing::error!(
+                "Failed to send order confirmation email to {}: {}",
+                req.username,
+                e
+            ),
+        }
+
+        let response = OrderConfirmationResponse {
+            success: true,
+            message: format!("Order confirmation received for order: {}", req.order_id),
         };
 
         Ok(Response::new(response))

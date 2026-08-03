@@ -117,3 +117,23 @@ pub struct CartResponse {
     pub items: Vec<CartItemResponse>,
     pub total: rust_decimal::Decimal,
 }
+
+// Order DTOs
+#[derive(Debug, Serialize)]
+pub struct OrderItemResponse {
+    pub product_id: Uuid,
+    pub product_name: String,
+    pub unit_price: Decimal,
+    pub quantity: i32,
+}
+
+#[derive(Debug, Serialize)]
+pub struct OrderResponse {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub status: String,
+    pub total_amount: Decimal,
+    pub items: Vec<OrderItemResponse>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}

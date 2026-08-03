@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package order;
+
+message OrderItemInput {
+    string product_id = 1;
+    int32 quantity = 2;
+}
+
+message OrderItem {
+    string product_id = 1;
+    string product_name = 2;
+    string unit_price = 3;
+    int32 quantity = 4;
+}
+
+message Order {
+    string id = 1;
+    string user_id = 2;
+    string status = 3;
+    string total_amount = 4;
+    repeated OrderItem items = 5;
+    string created_at = 6;
+    string updated_at = 7;
+}
+
+message CreateOrderRequest {
+    string user_id = 1;
+    repeated OrderItemInput items = 2;
+}
+
+message CreateOrderResponse {
+    Order order = 1;
+}
+
+message GetOrderRequest {
+    string order_id = 1;
+}
+
+message GetOrderResponse {
+    Order order = 1;
+}
+
+message ListOrdersRequest {
+    string user_id = 1;
+    int32 limit = 2;
+    int32 offset = 3;
+}
+
+message ListOrdersResponse {
+    repeated Order orders = 1;
+    int64 total = 2;
+}
+
+message WatchOrderStatusRequest {
+    string order_id = 1;
+}
+
+message OrderStatusUpdate {
+    string order_id = 1;
+    string status = 2;
+    string updated_at = 3;
+}
+
+// Order service: owns the order/checkout bounded context.
+// CreateOrder atomically validates + decrements stock and creates the order
+// inside a single DB transaction with row-level locking (see service.rs).
+service OrderService {
+    rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
+    rpc GetOrder(GetOrderRequest) returns (GetOrderResponse);
+    rpc ListOrders(ListOrdersRequest) returns (ListOrdersResponse);
+    rpc WatchOrderStatus(WatchOrderStatusRequest) returns (stream OrderStatusUpdate);
+}

@@ -28,3 +28,7 @@ cargo run --bin notification
 
 cargo run -p my_rest
 cargo run -p notification
+cargo run -p order --bin order
+
+-- watch a live order's status stream (demo of the streaming RPC)
+cargo run -p order --bin watch_client -- <order_id>
